@@ -2,17 +2,13 @@ package com.yahoo.sebastc.simpletodo;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -22,61 +18,73 @@ import android.widget.ListView;
 
 public class TodoActivity extends Activity {
 
-    private ArrayAdapter<String> arrayAdapter;
-	private EditText etNewItem;
-	private ListView lvItems;
-	private List<String> todoItems;
 	private File file;
+	private List<String> todoItems;
+	private ArrayAdapter<String> aTodoItems;
+	private ListView lvItems;
+	private EditText etNewItem;
 
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_todo);
-    	etNewItem = (EditText)findViewById(R.id.etNewItem);
-    	lvItems = (ListView) findViewById(R.id.lvItems);
-    	loadItems();
-        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, todoItems); 
-        lvItems.setAdapter(arrayAdapter);
-        setupListListener();
-    }
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_todo);
 
-	private void setupListListener() {
+		file = new File(getFilesDir(), "todo.txt");
+		loadItems();
+		
+		etNewItem = (EditText) findViewById(R.id.etNewItem);
+		lvItems = (ListView) findViewById(R.id.lvItems);
+
+		aTodoItems = new ArrayAdapter<String>(this,
+				android.R.layout.simple_list_item_1, todoItems);
+		lvItems.setAdapter(aTodoItems);
+		
+		setupLVItemsListener();
+	}
+
+	private void setupLVItemsListener() {
 		OnItemLongClickListener listener = new OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> adapter, View item,
 					int position, long id) {
-				todoItems.remove(position);
-				saveItems();
-				arrayAdapter.notifyDataSetChanged();
+				removeItem(position);
 				return false;
 			}
+
 		};
-		lvItems.setOnItemLongClickListener(listener );
+		lvItems.setOnItemLongClickListener(listener);
 	}
 
-	private void loadItems() {
-		file = new File(getFilesDir(), "todo.txt"); //
+	private void loadItems() { //
 		try {
-			todoItems = FileUtils.readLines(file); //What's the default encoding ?
+			todoItems = FileUtils.readLines(file);
 		} catch (IOException e) {
-			todoItems = new ArrayList<String>(); 
-			e.printStackTrace(); //TODO replace by user feedback.
+			todoItems = new ArrayList<String>();
+			e.printStackTrace(); // TODO replace by user feedback.
 		}
 	}
-	
+
 	private void saveItems() {
 		File file = new File(getFilesDir(), "todo.txt");
 		try {
 			FileUtils.writeLines(file, todoItems);
 		} catch (IOException e) {
-			e.printStackTrace(); //TODO replace by user feedback.
+			todoItems = new ArrayList<String>();
+			e.printStackTrace(); // TODO replace by user feedback.
 		}
 	}
-    
-    public void addItem(View view) {
-    	String newTaskName = etNewItem.getText().toString();
-    	arrayAdapter.add(newTaskName);
-    	etNewItem.setText("");
-    	saveItems();
-    }
+
+	private void removeItem(int position) {
+		todoItems.remove(position);
+		saveItems();
+		aTodoItems.notifyDataSetChanged();
+	}
+	
+	
+	public void addItem(View view) {
+		String newTaskName = etNewItem.getText().toString();
+		aTodoItems.add(newTaskName);
+		etNewItem.setText("");
+		saveItems();
+	}
 }
